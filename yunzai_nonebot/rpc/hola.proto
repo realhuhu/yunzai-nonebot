@@ -1,0 +1,23 @@
+//python -m grpc_tools.protoc -I . --python_out=. --pyi_out=. --grpc_python_out=. .\yunzai_nonebot\rpc\hola.proto
+
+syntax = "proto3";
+
+package hola;
+
+service Pipe {
+    rpc Option (OptionCode) returns (OptionCode) {};
+    rpc Channel (stream Request) returns (stream Response) {};
+}
+
+message OptionCode {
+    uint64 code = 1;
+}
+
+message Request {
+    uint64 user_id = 1;
+    uint64 request = 2;
+}
+
+message Response {
+    uint64 response = 1;
+}
