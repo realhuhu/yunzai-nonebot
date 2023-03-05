@@ -6,18 +6,559 @@ package hola;
 
 service Pipe {
     rpc Option (OptionCode) returns (OptionCode) {};
-    rpc Channel (stream Request) returns (stream Response) {};
+    rpc Channel (stream ToServer) returns (stream ToClient) {};
 }
 
+
+//--------message---------//
 message OptionCode {
     uint64 code = 1;
 }
 
-message Request {
-    uint64 user_id = 1;
-    uint64 request = 2;
+message ToServer {
+    oneof to_server_type {
+        Head head = 1;
+        Event event = 2;
+        Result result = 3;
+    }
 }
 
-message Response {
-    uint64 response = 1;
+message ToClient {
+    oneof to_client_type {
+        Request request = 1;
+    }
 }
+
+message Head {
+    int64 self_id = 1;
+}
+
+
+message Event {
+    repeated string plugins = 1;
+    int64 self_id = 2;
+    oneof event {
+        FriendRequestEvent friend_request = 3;
+        GroupRequestEvent group_request = 4;
+        PrivateMessageEvent private_message = 5;
+        GroupMessageEvent group_message = 6;
+        FriendAddNoticeEvent friend_add_notice = 7;
+        FriendRecallNoticeEvent friend_recall_notice = 8;
+        GroupIncreaseNoticeEvent group_increase_notice = 9;
+        GroupDecreaseNoticeEvent group_decrease_notice = 10;
+        GroupRecallNoticeEvent group_recall_notice = 11;
+        GroupBanNoticeEvent group_ban_notice = 12;
+        GroupAdminNoticeEvent group_admin_notice = 13;
+        PokeNotifyEvent poke_notify = 14;
+    }
+}
+
+
+message Request {
+    string request_id = 1;
+    int64 self_id = 2;
+    oneof request {
+        PrivateMessageRequest private_message = 3;
+        GroupMessageRequest group_message = 4;
+        DeleteMsgRequest delete_msg = 5;
+        GetMsgRequest get_msg = 6;
+        GetStrangerInfoRequest get_stranger_info = 7;
+        GetGroupInfoRequest get_group_info = 8;
+        GetGroupMemberInfoRequest get_group_member_info = 9;
+        GetGroupMemberListRequest get_group_member_list = 10;
+        SendPrivateForwardMsgRequest send_private_forward_msg = 11;
+        SendGroupForwardMsgRequest send_group_forward_msg = 12;
+    }
+}
+
+message Result {
+    string request_id = 1;
+    int64 self_id = 2;
+    oneof result {
+        PrivateMessageResult private_message = 3;
+        GroupMessageResult group_message = 4;
+        DeleteMsgResult delete_msg = 5;
+        GetMsgResult get_msg = 6;
+        GetStrangerInfoResult get_stranger_info = 7;
+        GetGroupInfoResult get_group_info = 8;
+        GetGroupMemberInfoResult get_group_member_info = 9;
+        GetGroupMemberListResult get_group_member_list = 10;
+        SendPrivateForwardMsgResult send_private_forward_msg = 11;
+        SendGroupForwardMsgResult send_group_forward_msg = 12;
+    }
+}
+//--------model---------//
+message User {
+    string user_id = 1;//发送者QQ号
+    string nickname = 2;//昵称
+}
+
+message Group {
+    string group_id = 1;
+    string group_name = 2;
+}
+
+message ReceivableMessageSegment {
+    oneof segment {
+        TextSegment text = 1;
+        AtSegment at = 2;
+        FaceSegment face = 3;
+        RpsSegment rps = 4;
+        DiceSegment dice = 5;
+        ImageSegment image = 6;
+        RecordSegment record = 7;
+        VideoSegment video = 8;
+        LocationSegment location = 9;
+        ShareSegment share = 10;
+        JsonSegment json = 11;
+        XmlSegment xml = 12;
+        PokeSegment poke = 13;
+        ReplySegment reply = 14;
+    }
+}
+
+message GroupMessageResponse {
+    int64 group_id = 1;
+    repeated SendibleMessageSegment message = 2;
+}
+
+message PrivateMessageResponse {
+    int64 user_id = 1;
+    repeated SendibleMessageSegment message = 2;
+}
+
+message SendibleMessageSegment {
+    oneof segment {
+        TextSegment text = 1;
+        FaceSegment face = 2;
+        ImageSegment image = 3;
+        RecordSegment record = 4;
+        VideoSegment video = 5;
+        AtSegment at = 6;
+        RpsSegment rps = 7;
+        DiceSegment dice = 8;
+        PokeSegment poke = 9;
+        AnonymousSegment anonymous = 10;
+        ShareSegment share = 11;
+        ContactSegment contact = 12;
+        LocationSegment location = 13;
+        MusicSegment music = 14;
+        CustomMusicSegment custom_music = 15;
+        ReplySegment reply = 16;
+        XmlSegment xml = 17;
+        JsonSegment json = 18;
+    }
+}
+//--------request---------//
+message FriendRequestEvent {
+    int64 time = 1;//事件发生的时间戳
+    int64 self_id = 2;//收到事件的机器人QQ号
+    string post_type = 3;//上报类型 {request}
+    string request_type = 4;//请求类型 {friend}
+    int64 user_id = 5;//发送请求的QQ号
+    string comment = 6;//验证信息
+    string flag = 7;//请求flag，在调用处理请求的API时需要传入
+}
+
+message GroupRequestEvent {
+    int64 time = 1;//事件发生的时间戳
+    int64 self_id = 2;//收到事件的机器人QQ号
+    string post_type = 3;//上报类型 {request}
+    string request_type = 4;//请求类型 {group}
+    string sub_type = 5;//请求子类型，分别表示加群请求、邀请登录号入群 {add|invite}
+    int64 group_id = 6;//群号
+    int64 user_id = 7;//发送请求的QQ号
+    string comment = 8;//验证信息
+    string flag = 9;//请求flag，在调用处理请求的API时需要传入
+}
+//--------message---------//
+message PrivateMessageEvent {
+    int64 time = 1;//事件发生的时间戳
+    int64 self_id = 2;//收到事件的机器人QQ号
+    string post_type = 3;//上报类型 {message}
+    string message_type = 4;//消息类型 {private}
+    string sub_type = 5;//消息子类型 {friend|group|other}
+    string message_id = 6;//消息ID
+    int64 user_id = 7;//发送者QQ号
+    repeated ReceivableMessageSegment message = 8;//消息内容
+    string raw_message = 9;//原始消息内容
+    int64 font = 10;//字体
+    Sender sender = 11;//发送人信息
+    bool to_me = 12;//消息是否与机器人有关
+    Reply reply = 13;//消息中提取的回复消息
+}
+
+message GroupMessageEvent {
+    int64 time = 1;//事件发生的时间戳
+    int64 self_id = 2;//收到事件的机器人QQ号
+    string post_type = 3;//上报类型 {message}
+    string message_type = 4;//消息类型 {group}
+    string sub_type = 5;//消息子类型 {normal|anonymous|notice}
+    string message_id = 6;//消息ID
+    int64 group_id = 7;//群号
+    int64 user_id = 8;//发送者QQ号
+    Anonymous anonymous = 9;//匿名信息
+    repeated ReceivableMessageSegment message = 10;//消息内容
+    string raw_message = 11;//原始消息内容
+    int64 font = 12;//字体
+    Sender sender = 13;//发送人信息
+    bool to_me = 14;//消息是否与机器人有关
+    Reply reply = 15;//消息中提取的回复消息
+}
+//--------notice---------//
+message FriendAddNoticeEvent {
+    int64 time = 1;//事件发生的时间戳
+    int64 self_id = 2;//收到事件的机器人QQ号
+    string post_type = 3;//上报类型 {notice}
+    string notice_type = 4;//通知类型 {friend_add}
+    int64 user_id = 5;//新添加好友QQ号
+}
+
+message FriendRecallNoticeEvent {
+    int64 time = 1;//事件发生的时间戳
+    int64 self_id = 2;//收到事件的机器人QQ号
+    string post_type = 3;//上报类型 {notice}
+    string notice_type = 4;//通知类型 {friend_recall
+    int64 user_id = 5;//好友QQ号
+    string message_id = 6;//被撤回的消息ID
+}
+
+message GroupIncreaseNoticeEvent {
+    int64 time = 1;//事件发生的时间戳
+    int64 self_id = 2;//收到事件的机器人QQ号
+    string post_type = 3;//上报类型 {notice}
+    string notice_type = 4;//通知类型 {group_increase}
+    string sub_type = 5;//事件子类型，分别表示管理员已同意入群、管理员邀请入群 {approve|invite}
+    int64 user_id = 6;//加入者QQ号
+    int64 group_id = 7;//群号
+    int64 operator_id = 8;//操作者QQ号
+}
+
+message GroupDecreaseNoticeEvent {
+    int64 time = 1;//事件发生的时间戳
+    int64 self_id = 2;//收到事件的机器人QQ号
+    string post_type = 3;//上报类型 {notice}
+    string notice_type = 4;//通知类型 {group_decrease}
+    string sub_type = 5;//消息子类型 {leave|kick|kick_me}
+    int64 user_id = 6;//离开者QQ号
+    int64 group_id = 7;//群号
+    int64 operator_id = 8;//操作者QQ号（如果是主动退群，则和user_id相同）
+}
+
+message GroupRecallNoticeEvent {
+    int64 time = 1;//事件发生的时间戳
+    int64 self_id = 2;//收到事件的机器人QQ号
+    string post_type = 3;//上报类型 {notice}
+    string notice_type = 4;//通知类型 {group_recall}
+    int64 user_id = 5;//消息发送者QQ号
+    int64 group_id = 6;//群号
+    int64 operator_id = 7;//操作者QQ号
+    string message_id = 8;//被撤回的消息ID
+}
+
+message GroupBanNoticeEvent {
+    int64 time = 1;//事件发生的时间戳
+    int64 self_id = 2;//收到事件的机器人QQ号
+    string post_type = 3;//上报类型 {notice}
+    string notice_type = 4;//通知类型 {group_ban}
+    string sub_type = 5;//事件子类型，分别表示禁言、解除禁言 {ban|lift_ban}
+    int64 user_id = 6;//被禁言QQ号
+    int64 group_id = 7;//群号
+    int64 operator_id = 8;//操作者QQ号
+    int64 duration = 9;//禁言时长，单位秒
+}
+
+message GroupAdminNoticeEvent {
+    int64 time = 1;//事件发生的时间戳
+    int64 self_id = 2;//收到事件的机器人QQ号
+    string post_type = 3;//上报类型 {notice}
+    string notice_type = 4;//通知类型 {group_admin}
+    string sub_type = 5;//消息子类型 {set|unset}
+    int64 user_id = 6;//管理员QQ号
+    int64 group_id = 7;//群号
+}
+
+message PokeNotifyEvent {
+    int64 time = 1;//事件发生的时间戳
+    int64 self_id = 2;//收到事件的机器人QQ号
+    string post_type = 3;//上报类型 {notice}
+    string notice_type = 4;//通知类型 {notify}
+    string sub_type = 5;//消息子类型 {poke}
+    int64 user_id = 6;//发送者QQ号
+    int64 target_id = 7;//被戳者QQ号
+    int64 group_id = 8;//群号
+}
+//--------segment---------//
+message TextSegment {
+    string data = 1;//纯文本内容
+}
+
+message AtSegment {
+    string qq = 1;//@的QQ号，all表示全体成员
+}
+
+message FaceSegment {
+    string id = 1;//QQ表情ID
+}
+
+message RpsSegment {}
+
+message DiceSegment {}
+
+message ImageSegment {
+    string file = 1;//图片文件名
+    string type = 2;//图片类型，flash表示闪照，无此参数表示普通图片
+    string url = 3;//图片URL
+
+    bytes content = 4; // 图片二进制数据(发送)
+    string timeout = 5; // 超时时间(发送)
+}
+
+message RecordSegment {
+    string file = 1;//语音文件名
+    string url = 2;//语音URL
+    bytes content = 3; // 录音二进制数据(发送)
+    string timeout = 4; // 超时时间(发送)
+}
+
+message VideoSegment {
+    string file = 1;//视频文件名
+    string url = 2;//视频URL
+    bytes content = 3; // 视频二进制数据(发送)
+    string timeout = 4; // 超时时间(发送)
+}
+
+message LocationSegment {
+    string lat = 1;//纬度
+    string lon = 2;//经度
+    string title = 3;//标题
+    string content = 4;//内容描述
+}
+
+message ShareSegment {
+    string url = 1;//URL
+    string title = 2;//标题
+    string content = 3;//内容描述
+    string image = 4;//图片URL
+}
+
+message JsonSegment {
+    string data = 1;//JSON内容
+}
+
+message XmlSegment {
+    string data = 1;//XML内容
+}
+
+message PokeSegment {
+    string type = 1;//类型
+    string id = 2;//ID
+    string name = 3;//表情名(接收)
+}
+
+message ReplySegment {
+    string id = 1;//回复时引用的消息ID
+}
+
+message AnonymousSegment {
+    bool ignore = 1;//表示无法匿名时是否继续发送
+}//(发送)
+
+message ContactSegment {
+    string type = 1;//推荐类型 {qq|group}
+    string id = 2;//被推荐用户QQ|群号
+}//(发送)
+
+message MusicSegment {
+    string type = 1;//音乐来源 {qq|163|xm}
+    string id = 2;//歌曲ID
+}//(发送)
+
+message CustomMusicSegment {
+    string type = 1;//音乐来源 custom
+    string url = 2;//点击后跳转目标URL
+    string audio = 3;//音乐URL
+    string title = 4;//标题
+    string content = 5;//发送时可选，内容描述
+    string image = 6;//发送时可选，图片 URL
+}//(发送)
+
+message _ForwardSegment {
+    string name = 1;//名称
+    string uin = 2;//QQ
+    repeated SendibleMessageSegment content = 3;//内容
+}
+
+
+//--------request result---------//
+message SendMessageRequest {
+    string detail_type = 1; //发送到 {private|group}
+    string user_id = 2;
+    string group_id = 3;
+    repeated SendibleMessageSegment message = 4;
+}
+message SendMessageResult {
+    string message_id = 1;
+    string time = 2;
+}
+
+message DeleteMessageRequest {
+    string message_id = 1;
+}
+message DeleteMessageResult {}
+
+message GetMessageRequest {
+    string message_id = 1;
+}
+message GetMessageResult {} //TODO
+
+message GetForwardMessageRequest {
+    string id = 1;
+}
+message GetForwardMessageResult {} //TODO
+
+message SendLikeRequest {
+    string user_id = 1;
+    int64 times = 2;
+}
+message SendLikeResult {} //TODO
+
+message GetSelfInfoRequest {}
+message GetSelfInfoResult {
+    string user_id = 1;
+    string nickname = 2;
+}
+
+message GetUserInfoRequest {
+    string user_id = 1;
+}
+message GetUserInfoResult {
+    string user_id = 1;
+    string nickname = 2;
+}
+
+message GetFriendListRequest {}
+message GetFriendListResult {
+    repeated User friend_list = 1;
+}
+
+message GetGroupInfoRequest {
+    string group_id = 1;
+}
+message GetGroupInfoResult {
+    string group_id = 1;
+    string group_name = 2;
+}
+
+message GetGroupListRequest {
+    string group_id = 1;
+}
+message GetGroupListResult {
+    string group_id = 1;
+    string group_name = 2;
+}
+
+message GetGroupMemberInfoRequest {
+    string group_id = 1;
+    string user_id = 2;
+}
+message GetGroupMemberInfoResult {
+    string user_id = 1;
+    string nickname = 2;
+}
+
+message GetGroupMemberListRequest {
+    string group_id = 1;
+}
+message GetGroupMemberListResult {
+    repeated User group_member_list = 1;
+}
+
+message SetGroupNameRequest {
+    string group_id = 1;
+    string group_name = 2;
+}
+message SetGroupNameResult {}
+
+message LeaveGroupRequest {
+    string group_id = 1;
+}
+message LeaveGroupResult {}
+
+message KickGroupMemberRequest {
+    string group_id = 1;
+    string user_id = 2;
+}
+message KickGroupMemberResult {}
+
+message BanGroupMemberRequest {
+    string group_id = 1;
+    string user_id = 2;
+}
+message BanGroupMemberResult {}
+
+message UnbanGroupMemberRequest {
+    string group_id = 1;
+    string user_id = 2;
+}
+message UnbanGroupMemberResult {}
+
+message SetGroupAnonymousBanRequest {
+    string group_id = 1;
+    map<string, string > anonymous = 2;
+    string anonymous_flag = 3;
+    int64 duration = 4;
+}
+message SetGroupAnonymousBanResult {}
+
+message SetGroupWholeBanRequest {
+    string group_id = 1;
+    bool enable = 2;
+}
+message SetGroupWholeBanResult {}
+
+message SetGroupAdminRequest {
+    string group_id = 1;
+    string user_id = 2;
+}
+message SetGroupAdminResult {}
+
+
+message UnsetGroupAdminRequest {
+    string group_id = 1;
+    string user_id = 2;
+}
+message UnsetGroupAdminResult {}
+
+message SetGroupCardRequest {
+    string group_id = 1;
+    string user_id = 2;
+    string card = 3;
+}
+message SetGroupCardResult {}
+
+message SetGroupSpecialTitleRequest {
+    string group_id = 1;
+    string user_id = 2;
+    string special_title = 3;
+    int64 duration = 4;
+}
+message SetGroupSpecialTitleResult {}
+
+message SetFriendAddRequestRequest {
+    string flag = 1;
+    bool approve = 2;
+    string remark = 3;
+}
+message SetFriendAddRequestResult {}
+
+message SetGroupAddRequestRequest {
+    string flag = 1;
+    string sub_type = 2;
+    bool approve = 3;
+    string reason = 4;
+}
+message SetGroupAddRequestResult {}
+
+
+

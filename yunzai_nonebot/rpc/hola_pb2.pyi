@@ -11,12 +11,12 @@ class OptionCode(_message.Message):
     def __init__(self, code: _Optional[int] = ...) -> None: ...
 
 class Request(_message.Message):
-    __slots__ = ["request", "user_id"]
+    __slots__ = ["request", "self_id"]
     REQUEST_FIELD_NUMBER: _ClassVar[int]
-    USER_ID_FIELD_NUMBER: _ClassVar[int]
+    SELF_ID_FIELD_NUMBER: _ClassVar[int]
     request: int
-    user_id: int
-    def __init__(self, user_id: _Optional[int] = ..., request: _Optional[int] = ...) -> None: ...
+    self_id: str
+    def __init__(self, self_id: _Optional[str] = ..., request: _Optional[int] = ...) -> None: ...
 
 class Response(_message.Message):
     __slots__ = ["response"]

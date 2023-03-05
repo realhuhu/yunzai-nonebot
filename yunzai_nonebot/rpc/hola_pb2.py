@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dyunzai_nonebot/rpc/hola.proto\x12\x04hola\"\x1a\n\nOptionCode\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x04\"+\n\x07Request\x12\x0f\n\x07user_id\x18\x01 \x01(\x04\x12\x0f\n\x07request\x18\x02 \x01(\x04\"\x1c\n\x08Response\x12\x10\n\x08response\x18\x01 \x01(\x04\x32\x66\n\x04Pipe\x12.\n\x06Option\x12\x10.hola.OptionCode\x1a\x10.hola.OptionCode\"\x00\x12.\n\x07\x43hannel\x12\r.hola.Request\x1a\x0e.hola.Response\"\x00(\x01\x30\x01\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x1dyunzai_nonebot/rpc/hola.proto\x12\x04hola\"\x1a\n\nOptionCode\x12\x0c\n\x04\x63ode\x18\x01 \x01(\x04\"+\n\x07Request\x12\x0f\n\x07self_id\x18\x01 \x01(\t\x12\x0f\n\x07request\x18\x02 \x01(\x04\"\x1c\n\x08Response\x12\x10\n\x08response\x18\x01 \x01(\x04\x32\x66\n\x04Pipe\x12.\n\x06Option\x12\x10.hola.OptionCode\x1a\x10.hola.OptionCode\"\x00\x12.\n\x07\x43hannel\x12\r.hola.Request\x1a\x0e.hola.Response\"\x00(\x01\x30\x01\x62\x06proto3')
 
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, globals())
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'yunzai_nonebot.rpc.hola_pb2', globals())
