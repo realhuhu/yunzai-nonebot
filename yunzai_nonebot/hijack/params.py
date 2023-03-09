@@ -1,5 +1,4 @@
-import inspect
-from typing import Optional, Type, Tuple, Any
+from typing import Any
 
 from nonebot import logger
 from nonebot.exception import SkippedException

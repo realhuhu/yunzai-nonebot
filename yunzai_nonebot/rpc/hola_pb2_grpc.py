@@ -21,8 +21,8 @@ class PipeStub(object):
                 )
         self.Channel = channel.stream_stream(
                 '/hola.Pipe/Channel',
-                request_serializer=yunzai__nonebot_dot_rpc_dot_hola__pb2.Request.SerializeToString,
-                response_deserializer=yunzai__nonebot_dot_rpc_dot_hola__pb2.Response.FromString,
+                request_serializer=yunzai__nonebot_dot_rpc_dot_hola__pb2.ToServer.SerializeToString,
+                response_deserializer=yunzai__nonebot_dot_rpc_dot_hola__pb2.ToClient.FromString,
                 )
 
 
@@ -51,8 +51,8 @@ def add_PipeServicer_to_server(servicer, server):
             ),
             'Channel': grpc.stream_stream_rpc_method_handler(
                     servicer.Channel,
-                    request_deserializer=yunzai__nonebot_dot_rpc_dot_hola__pb2.Request.FromString,
-                    response_serializer=yunzai__nonebot_dot_rpc_dot_hola__pb2.Response.SerializeToString,
+                    request_deserializer=yunzai__nonebot_dot_rpc_dot_hola__pb2.ToServer.FromString,
+                    response_serializer=yunzai__nonebot_dot_rpc_dot_hola__pb2.ToClient.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -93,7 +93,7 @@ class Pipe(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.stream_stream(request_iterator, target, '/hola.Pipe/Channel',
-            yunzai__nonebot_dot_rpc_dot_hola__pb2.Request.SerializeToString,
-            yunzai__nonebot_dot_rpc_dot_hola__pb2.Response.FromString,
+            yunzai__nonebot_dot_rpc_dot_hola__pb2.ToServer.SerializeToString,
+            yunzai__nonebot_dot_rpc_dot_hola__pb2.ToClient.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

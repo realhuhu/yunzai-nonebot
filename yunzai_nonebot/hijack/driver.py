@@ -1,15 +1,18 @@
 import asyncio
 from pathlib import Path
-from typing import Callable, Union, Awaitable, Set, Type, Dict, TYPE_CHECKING
+from typing import Type, Callable, Union, Awaitable, Set, Optional, TYPE_CHECKING
 
 import nonebot
 from nonebot.log import logger
 from nonebot.config import Env, Config
 from nonebot.internal.driver import Driver
-from nonebot.adapters.onebot import V11Bot, V12Bot
 from omegaconf import OmegaConf
 
-from yunzai_nonebot.utils import Servicer
+from yunzai_nonebot.utils import Servicer, AsyncMap
+from yunzai_nonebot.hijack.bot import OneBot
+
+if TYPE_CHECKING:
+    from yunzai_nonebot.hijack.adapter import OneAdapter
 
 HOOK_FUNC = Union[Callable[[], None], Callable[[], Awaitable[None]]]
 
@@ -21,6 +24,7 @@ class GRPCDriver(Driver):
         self.startup_funcs: Set[HOOK_FUNC] = set()
         self.shutdown_funcs: Set[HOOK_FUNC] = set()
         self.servicer = Servicer(self.handler, config)
+        self.adapter: Optional["OneAdapter"] = None
 
     @property
     def type(self) -> str:
@@ -78,18 +82,22 @@ class GRPCDriver(Driver):
             else:
                 handler()
 
+    def register_adapter(self, adapter: Type["OneAdapter"], **kwargs) -> None:
+        self.adapter = adapter(self, **kwargs)
+
     async def handler(self, self_id: str):
-        event_handlers = []
-        adapter_v11, adapter_v12 = self._adapters.values()
-        self_id_v11=self_id+"v11"
-        self_id_v12=self_id+"v12"
-        async for request in await self.servicer.connections[self_id]:
-            print(request)
-            await asyncio.gather(*[handler(request) for handler in event_handlers])
+        self.adapter.bot_connect(OneBot(self.adapter, self_id))
+        result_store = AsyncMap("result_store")
+        async for grpc_request in await self.servicer.connections[self_id]:
+            grpc_request_type = grpc_request.WhichOneof("to_server_type")
+            if grpc_request_type == "event":
+                await self.adapter.bots[self_id].handle_event(grpc_request.event)
+            elif grpc_request_type == "request":
+                await result_store.set(grpc_request.request.request_id, grpc_request.request)
 
 
 def hijack_driver(config_path: Path):
-    fields = Config.__dict__["__fields__"]
+    fields = Config.__fields__
     yaml = dict(OmegaConf.load(config_path))
     for k, v in yaml.items():
         if field := fields.get(k):

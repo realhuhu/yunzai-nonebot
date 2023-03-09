@@ -36,14 +36,18 @@ class Servicer(hola_pb2_grpc.Pipe):
 
     async def Channel(
             self,
-            request_iterator: AsyncGenerator[hola_pb2.Request, Any],
+            request_iterator: AsyncGenerator[hola_pb2.ToServer, Any],
             context: grpc.ServicerContext,
             **kwargs
-    ):
-        self_id = (await request_iterator.__anext__()).self_id
-        if not self.connections[self_id].done():
-            self.connections[self_id].set_result(request_iterator)
-        asyncio.run_coroutine_threadsafe(self.handler(self_id), asyncio.get_event_loop())
+    ) -> AsyncGenerator[hola_pb2.ToClient, Any]:
+        init = await request_iterator.__anext__()
 
-        async for i in AsyncQueue(f"result{self_id}"):
-            yield hola_pb2.Response(response=i)
+        if init.WhichOneof("to_server_type") != "head":
+            return
+
+        self_id = init.head.self_id
+        self.connections[self_id].set_result(request_iterator)
+        asyncio.create_task(self.handler(self_id))
+
+        async for grpc_response in AsyncQueue(self_id):
+            yield hola_pb2.ToClient(**grpc_response)
